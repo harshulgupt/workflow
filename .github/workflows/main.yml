@@ -34,7 +34,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: generated-files
-        path: $(find . -type f ! -name "*.ipynb" ! -name "*.py")
+        path: $(find . -type f ! -name "*.ipynb" ! -name "*.py" -print0 | tr '\0' '\n')
 
     - name: Push to Main Branch
       if: github.ref == 'refs/heads/main'
