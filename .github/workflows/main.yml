@@ -21,7 +21,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install jupyter
+        pip install jupyter jinja2
 
     - name: Run Notebooks
       run: |
@@ -30,27 +30,14 @@ jobs:
           python "${notebook%.*}.py"
         done
 
+    - name: Push Generated Files
+      if: success()
+      run: |
+        # The notebooks themselves can generate files in the desired locations.
+        # You do not need to specify a location for the generated files in the workflow.
+
     - name: Upload Files
       uses: actions/upload-artifact@v1
       with:
         name: generated-files
         path: $(find . -type f ! -name "*.ipynb" ! -name "*.py" -print0 | tr '\0' '\n')
-
-    - name: Push to Main Branch
-      if: github.ref == 'refs/heads/main'
-      uses: actions/github-script@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        script: |
-          echo "Pushing generated files to main branch"
-          cd $(dirname "$GITHUB_WORKSPACE")
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git checkout main
-          rm -rf $(find . -type f ! -name "*.ipynb" ! -name "*.py")
-          mv generated-files/* .
-          rm -rf generated-files
-          git add -A
-          git commit -m "Update generated files"
-          git push
